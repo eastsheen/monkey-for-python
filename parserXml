@@ -1,0 +1,88 @@
+#!\usr\bin\env python
+#coding=UTF-8
+'''
+author: eastsheen
+data:   2014-6-5
+email:  yangdongxian@gmail.com
+python version:Python 2.7.3 
+run system: window
+'''
+import os
+import codecs
+import xml.dom.minidom as minidom
+from xml.dom.minidom import Node
+
+class Parser():
+    def __init__(self,xmlPath):
+        self.__xmlName = xmlPath
+        self.__dom = None
+        self.__root = None
+        
+    def __create_new_node(self,node_name,node_text = None):
+        if self.__dom == None:
+            raise Exception,'创建结点时，document对象还不存在'
+        if None == node_text:
+            return self.__dom.createElement(node_name)
+        else:
+            newNode = self.__dom.createElement(node_name)
+            newText = self.__dom.createTextNode(node_text)
+            newNode.appendChild(newText)
+            return newNode
+
+    def __init_xml__(self):
+        try:
+            impl = minidom.getDOMImplementation()
+            self.__dom = impl.createDocument(None,self.__xmlName,None)
+            self.__root = self.__dom.documentElement
+        except Exception,err:
+            traceback.print_exc()
+            raise Exception,'写myCtrip.xml文件出错'
+        
+    def __add_xml__(self,name,text,attribute):
+        if self.__root == None:
+            raise Exception,'创建结点时，root结点不存在'
+        name_node = self.__create_new_node('text',text)
+        new_xml_node = self.__create_new_node('index')
+        new_xml_node.appendChild(name_node)
+        new_xml_node.setAttribute('id',attribute)
+        self.__root.appendChild(new_xml_node)
+
+    def __end_xml__(self,XmlName):
+        try:
+            f = open(self.__xmlName,'wb')
+            writer = codecs.lookup('utf-8')[3](f)
+            self.__dom.writexml(writer,encoding='utf-8')
+            writer.close()
+            f.close()
+            return True
+        except Exception,err:
+            traceback.print_exc()
+            raise Exception,'写myCtrip.xml文件出错'
+        
+    def getparser(self,tag,desid):
+        print 'start parse xml'
+        dom1 = minidom.parse(self.__xmlName)
+        root = dom1.documentElement
+        nodelist = root.getElementsByTagName(tag)
+        for node in nodelist:
+            if (node.getAttribute('id') == desid):
+                textlist = node.getElementsByTagName('text')
+                for text in textlist:
+                    for child in text.childNodes:
+                        if child.nodeType == Node.TEXT_NODE:
+                            return child.data
+                
+
+'''             
+#if __name__=='__main__':
+    #test = createXml()
+    #test.__init_xml__('myCtrip.xml')
+    #test.__add_xml__('index',r'id/home_index_hotel3',r"home_index_hotel3")
+    #test.__add_xml__('index',r'id/home_index_hotel2',r"home_index_hotel2")
+    #test.__add_xml__(name = 'index',text=r'id/home_index_myCtrip',attribute=r"home_index_myCtrip")
+    #test.__end_xml__()
+    #filepathName = r'E:\android\sdk\tools\myCtrip.xml'
+    #data = test.__getparser__(filepathName,'index','home_index_hotel3')
+    #print data
+    #print 'end'
+'''
